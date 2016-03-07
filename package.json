@@ -1,0 +1,31 @@
+{
+  "name": "khan-infection",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jscs index.js test/test.js && ./node_modules/.bin/mocha --compilers js:babel/register 'test/test.js'",
+    "build": "node node_modules/webpack/bin/webpack.js",
+    "build:watch": "node node_modules/webpack/bin/webpack.js --watch",
+    "start": "node node_modules/http-server/bin/http-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/mrjoelkemp/khan-infection.git"
+  },
+  "author": "Joel Kemp <joel@mrjoelkemp.com> (http://www.mrjoelkemp.com/)",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/mrjoelkemp/khan-infection#readme",
+  "devDependencies": {
+    "babel-loader": "~5.4.0",
+    "http-server": "~0.9.0",
+    "jscs": "~2.11.0",
+    "jscs-preset-mrjoelkemp": "~1.0.0",
+    "mocha": "~2.3.4",
+    "webpack": "~1.12.14"
+  },
+  "dependencies": {
+    "babel": "~5.2.17",
+    "vis": "~4.15.1"
+  }
+}
