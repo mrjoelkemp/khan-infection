@@ -5,6 +5,8 @@ export class User {
     this.siteVersion = siteVersion;
     this.students = students;
     this.coaches = coaches;
+
+    this.visited = false;
   }
 
   addStudent(student) {
@@ -14,6 +16,23 @@ export class User {
 
   addStudents(students) {
     students.forEach(student => this.addStudent(student));
+  }
+
+  isCoach() {
+    return !!this.students.length;
+  }
+
+  getUnvisitedConnectedCoaches() {
+    const myCoaches = this.coaches.filter(coach => !coach.visited);
+
+    const studentsThatAreCoaches = this.students.filter(student => student.isCoach() && !student.visited);
+
+    const studentsOtherCoaches = [];
+    this.students.forEach(student => {
+      addTo(studentsOtherCoaches, student.coaches.filter(coach => !coach.visited));
+    });
+
+    return myCoaches.concat(studentsThatAreCoaches).concat(studentsOtherCoaches);
   }
 };
 
@@ -25,45 +44,39 @@ function addTo(list, toAdd) {
   }
 }
 
-export function totalInfection(user) {
-  return limitedInfection(user, Infinity);
+export function totalInfection({user, siteVersion}) {
+  return limitedInfection({
+    user,
+    numToInfect: Infinity,
+    siteVersion
+  });
 };
 
-export function limitedInfection(user, numberOfUsersToInfect, infected, infectionVersion) {
-  if (typeof infected === 'undefined') {
-    infected = [user];
-  }
-
-  if (typeof infectionVersion === 'undefined') {
-    infectionVersion = user.siteVersion;
-  }
-
-  if (numberOfUsersToInfect < 1) {
+export function limitedInfection({user, numToInfect, siteVersion, infected = []} = {}) {
+  if (numToInfect < 1) {
     throw new Error('too few users to infect');
   }
 
   const uninfectedStudents = user.students.filter(function(student) {
-    return student.siteVersion !== infectionVersion;
+    return student.siteVersion !== siteVersion;
   });
 
-  const isUserInfected = user.siteVersion === infectionVersion;
-  const willYouAndYourClassFit = (isUserInfected ? 0 : 1) + uninfectedStudents.length + infected.length <= numberOfUsersToInfect;
+  const isUserInfected = user.siteVersion === siteVersion;
+  const willYouAndYourClassFit = (isUserInfected ? 0 : 1) + uninfectedStudents.length + infected.length <= numToInfect;
 
-  if (willYouAndYourClassFit) {
-    infect(uninfectedStudents, infected, infectionVersion);
+  if (user.isCoach() && willYouAndYourClassFit) {
+    infect(uninfectedStudents, infected, siteVersion);
 
-    if (!isUserInfected) {
-      infect([user], infected, infectionVersion);
+    if (user.siteVersion !== siteVersion) {
+      infect([user], infected, siteVersion);
     }
-
-    uninfectedStudents.forEach(function(student) {
-      limitedInfection(student, numberOfUsersToInfect, infected, infectionVersion);
-    });
   }
 
-  user.coaches.forEach(function(coach) {
-    limitedInfection(coach, numberOfUsersToInfect, infected, infectionVersion);
-  });
+  user.visited = true;
+
+  const coaches = user.getUnvisitedConnectedCoaches();
+
+  coaches.forEach(coach => limitedInfection({user: coach, numToInfect, siteVersion, infected}));
 
   return infected.length;
 };

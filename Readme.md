@@ -9,7 +9,6 @@ and to use a git url as the module's path in your package.json file.
 
 #### Assumptions
 
-* The host user (the seed user for the infection algorithms) is infected
 * A coach can be a student of another coach
 * A coach cannot coach themself. i.e., a student cannot be coached by themself
 * A student can be coached by multiple coaches
@@ -20,29 +19,34 @@ and to use a git url as the module's path in your package.json file.
 import {totalInfection, limitedInfection, User} from 'khan-infection';
 
 // assuming user is an instance of a khan-infection User
-totalInfection(user);
+totalInfection({
+  user,
+  siteVersion: 1
+});
 
-limitedInfection(user, 2);
+limitedInfection({
+  user,
+  numToInfect: 2,
+  siteVersion: 1
+});
 ```
 
 * Both `totalInfection` and `limitedInfection` return a count of the number of infected users
+* `siteVersion`: the version of the site that all infected users should have
+* `numToInfect`: the maximum number of users to infect
 
 You can create `User` instances via:
 
 ```js
 import {User} from 'khan-infection';
 
-const host = new User({
-  siteVersion: 1
-})
+const host = new User();
 ```
 
 To set up coaching relationships:
 
 ```js
-const host = new User({
-  siteVersion: 1
-});
+const host = new User();
 
 const student1 = new User();
 const student2 = new User();
@@ -74,26 +78,20 @@ composition of `limitedInfection` became clear and quite lovely.
 The implementation is a greedy algorithm modeled around the idea of a "class": a coach and their students.
 
 * For a given user/coach, we try to infect their class (so long as there are uninfected students and infecting the class wouldn't exceed the number of desired infections).
-* We then recursively try to infect an infected student's class (if they happened to also be a coach).
-* We then recursively try to infect the given user/coach's coaches' classes.
- - e.g., If A coaches B and C coaches B, then we'd try to infect C's class when visiting B.
+* We then find all connected, unvisited coaches (the given user's coaches, the user's students that are also coaches, and any other coaches of the current user's students)
+* We then recursively try to infect the classes of the connected coaches.
 
-A few known issues with the implementation:
+A few known trade-offs with the implementation:
 
-* It does not exhaustively search the graph for classes to infect. i.e., it's a bit too greedy
- - It will only consider classes connected to parts of the connected component starting with the infected host
-  - This means that the host's immediate class (if it's a coach), must fit within the infection threshold; otherwise, we'll only consider classes of coaches of the host (i.e., where the host is a student).
- - It will not choose the most optimal classes to maximize the infection threshold
-
-**NOTE:** I have intentionally kept a failing test enabled in the test suite to indicate that the ideal implementation
-would address the issues above. With more time, I would rethink the algorithm's approach – possibly rewriting the function.
+* It does not exhaustively search the graph for classes to infect. i.e., it's very greedy
+ - It does not attempt to maximize the infection based on the numToInfect. It's fine with being close to `numToInfect` without being "as close as possible."
 
 The runtime complexity of this implementation is the following, where N is the number of Users in the graph:
 
 * O(N) time
  - In the case when the entire graph connected to the host fits within the treshold
 * O(N) space
- - Due to the recursive solution's stack footprint and the maintained list of infected users
+ - Due to the recursive solution's stack footprint, the maintained list of infected users, and the intermediate sublists
    - The list isn't necessary (it can be replaced with a count of infected users), but the list avoided
    the complexity of bubbling the incremented count of infected users up the recursion. Since all
    steps of the recursion modified the same `infected` list, the top-most stack of the recursion
