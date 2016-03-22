@@ -1,4 +1,6 @@
-import {User, totalInfection, limitedInfection} from '../';
+import {User, totalInfection, limitedInfection, getPlotData} from '../';
+import {infectedColor, uninfectedColor} from '../lib/getPlotData';
+
 import assert from 'assert';
 
 describe('totalInfection', function() {
@@ -380,5 +382,54 @@ describe('limitedInfection', function() {
         });
       });
     });
+  });
+});
+
+describe('getPlotData', function() {
+  beforeEach(function() {
+    this.host = new User();
+    this.student1 = new User();
+  });
+
+  it('returns the nodes and edges of all node connections', function() {
+    this.host.addStudent(this.student1);
+
+    const data = getPlotData({user: this.host});
+
+    assert.equal(data.nodes.length, 2);
+    assert.equal(data.edges.length, 1);
+
+    assert.deepEqual(data.nodes[0], {
+      id: this.host.id,
+      label: `Coach ${this.host.id}`,
+      color: uninfectedColor
+    });
+
+    assert.deepEqual(data.nodes[1], {
+      id: this.student1.id,
+      label: `Student ${this.student1.id}`,
+      color: uninfectedColor
+    });
+
+    assert.deepEqual(data.edges[0], {
+      from: this.host.id,
+      to: this.student1.id
+    });
+  });
+
+  it('handles more complex cases',function() {
+    this.student2 = new User();
+
+    this.host.addStudents([this.student1, this.student2]);
+
+    this.student3 = new User();
+    this.coach = new User();
+
+    this.coach.addStudents([this.student2, this.student3]);
+
+    const data = getPlotData({user: this.host});
+
+    assert.equal(data.nodes.length, 5);
+    assert.equal(data.edges.length, 4);
   });
 });

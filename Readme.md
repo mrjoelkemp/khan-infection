@@ -1,7 +1,8 @@
 #### khan-infection
 
-Since this is a private module, you need access to the repo
-and to use a git url as the module's path in your package.json file.
+![](http://i.imgur.com/G9ZPNDB.png)
+
+Since this is a private module, you need access to the repo and to use a git url as the module's path in your package.json file.
 
 * This module was written in JavaScript (ES2015 using babel) and Node
  * Your consuming app will need to support ES2015
@@ -12,8 +13,12 @@ and to use a git url as the module's path in your package.json file.
 * A coach can be a student of another coach
 * A coach cannot coach themself. i.e., a student cannot be coached by themself
 * A student can be coached by multiple coaches
+* The host must be a coach or a student of another coach
 
 #### Usage
+
+* via `khan-infection` if used as a private npm module
+* via `window.KhanInfection` if using the distributable in `dist/khan-infection.js`
 
 ```js
 import {totalInfection, limitedInfection, User} from 'khan-infection';
@@ -75,11 +80,11 @@ composition of `limitedInfection` became clear and quite lovely.
 
 ###### limitedInfection
 
-The implementation is a greedy algorithm modeled around the idea of a "class": a coach and their students.
+The implementation is a breadth-first, greedy algorithm modeled around the idea of a "class": a coach and their students.
 
 * For a given user/coach, we try to infect their class (so long as there are uninfected students and infecting the class wouldn't exceed the number of desired infections).
-* We then find all connected, unvisited coaches (the given user's coaches, the user's students that are also coaches, and any other coaches of the current user's students)
-* We then recursively try to infect the classes of the connected coaches.
+* We then find all connected coaches (the given user's coaches, the user's students that are also coaches, and any other coaches of the current user's students)
+* We then try to infect the classes of the connected coaches.
 
 A few known trade-offs with the implementation:
 
@@ -89,11 +94,23 @@ A few known trade-offs with the implementation:
 The runtime complexity of this implementation is the following, where N is the number of Users in the graph:
 
 * O(N) time
- - In the case when the entire graph connected to the host fits within the treshold
+  - In the case when the entire graph connected to the host fits within the treshold
 * O(N) space
- - Due to the recursive solution's stack footprint, the maintained list of infected users, and the intermediate sublists
-   - The list isn't necessary (it can be replaced with a count of infected users), but the list avoided
-   the complexity of bubbling the incremented count of infected users up the recursion. Since all
-   steps of the recursion modified the same `infected` list, the top-most stack of the recursion
-   could return the list's length for an accurate total of infected users. Avoiding the list wouldn't
-   change the space complexity due to the recursive solution's pointer memory footprint.
+  - The additional memory of the User queue during the breadth-first traversal
+  - The cache of visited User ids used to prevent cycles
+
+---
+
+#### Optional Features:
+
+###### Visualizing the infection
+
+* Run `npm start` to start an http server
+* Visit http://localhost:8080/demo/ and observe the rendered example graph in `demo/index.js`
+
+If you want to modify the library layer at all:
+
+* Run `npm run build` or `npm run build:watch` to use webpack to rebuild the distributable version of the library at `dist/khan-infection.js`
+* You should then be able to refresh the demo page (if you have the server running)
+
+Note: this uses [vis.js](http://visjs.org/index.html#) to render the graph.
