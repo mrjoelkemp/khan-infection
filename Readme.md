@@ -105,6 +105,13 @@ The runtime complexity of this implementation is the following, where N is the n
 
 ###### Visualizing the infection
 
+In order to visualize an infection, one of the infection algorithms must be run first on a given host.
+Otherwise, you'll only see a rendered graph of all users.
+
+The algorithm for this uses the exported `getPlotData` function to traverse the graph of all connected coaches
+to the given host and adds all connected users to a list of nodes and creates edges between coaches and students.
+These nodes and edges are piped into vis.js for rendering.
+
 * Run `npm start` to start an http server
 * Visit http://localhost:8080/demo/ and observe the rendered example graph in `demo/index.js`
 
@@ -113,4 +120,4 @@ If you want to modify the library layer at all:
 * Run `npm run build` or `npm run build:watch` to use webpack to rebuild the distributable version of the library at `dist/khan-infection.js`
 * You should then be able to refresh the demo page (if you have the server running)
 
-Note: this uses [vis.js](http://visjs.org/index.html#) to render the graph.
+Note: this uses [vis.js](http://visjs.org/index.html#) and `khan-infection/getPlotData` to render the graph.
